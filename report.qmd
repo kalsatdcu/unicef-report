@@ -1,3 +1,21 @@
+---
+title: "The Invisible Crisis: Child Deprivation and Maternal Health Worldwide"
+author: "Your Name"
+date: today
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+    theme: flatly
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    smooth-scroll: true
+execute:
+  warning: false
+  message: false
+---
+
 #| label: load-data
 #| echo: true
 #| warning: false
@@ -9,3 +27,72 @@ ind2 = pl.read_csv("unicef_indicator_2.csv")
 meta = pl.read_csv("unicef_metadata.csv")
 
 print(ind1.shape, ind2.shape, meta.shape)
+
+#| label: eda
+#| echo: true
+
+# Quick overview
+print(ind1.describe())
+print(ind1.null_count())
+
+# ind1: keep only "Total" sex rows to avoid double-counting
+ind1_clean = ind1.filter(pl.col("sex") == "Total")
+ind2_clean = ind2.filter(pl.col("sex") == "Total")
+
+#| label: merge-data
+#| echo: true
+
+# Get most recent year per country for indicator 1
+ind1_latest = (
+    ind1_clean
+    .sort("time_period", descending=True)
+    .group_by("alpha_3_code")
+    .first()
+    .rename({"obs_value": "anc_pct", "time_period": "ind1_year"})
+)
+
+# Get most recent year per country for indicator 2
+ind2_latest = (
+    ind2_clean
+    .sort("time_period", descending=True)
+    .group_by("alpha_3_code")
+    .first()
+    .rename({"obs_value": "deprivation_pct", "time_period": "ind2_year"})
+)
+
+# Get most recent metadata per country
+meta_latest = (
+    meta
+    .sort("year", descending=True)
+    .group_by("alpha_3_code")
+    .first()
+    .rename({
+        "GDP per capita (constant 2015 US$)": "gdp_per_capita",
+        "Life expectancy at birth, total (years)": "life_expectancy",
+        "Population, total": "population",
+        "Birth rate, crude (per 1,000 people)": "birth_rate"
+    })
+)
+
+# Master joined dataframe
+master = (
+    ind1_latest
+    .join(ind2_latest.select(["alpha_3_code", "deprivation_pct"]),
+          on="alpha_3_code", how="left")
+    .join(meta_latest.select(["alpha_3_code", "gdp_per_capita",
+                               "life_expectancy", "population", "birth_rate"]),
+          on="alpha_3_code", how="left")
+    .drop_nulls(subset=["anc_pct"])
+)
+
+#| label: timeseries-prep
+
+# For the time-series chart: pick 5 representative countries
+focus_countries = ["Nigeria", "India", "Bangladesh", "Ethiopia", "Brazil"]
+
+ts_data = (
+    ind1_clean
+    .filter(pl.col("country").is_in(focus_countries))
+    .select(["country", "time_period", "obs_value"])
+    .sort("time_period")
+)
