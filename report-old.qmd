@@ -17,22 +17,12 @@ execute:
 ---
 
 ## Introduction
-
-Every year, **millions of children** are born into conditions of compounding disadvantage.
-This report examines two UNICEF indicators across multiple countries to ask:
-*does economic development translate into better outcomes for mothers and children?*
-
-The data tells a clear, if uncomfortable, story — countries with low GDP per capita
-consistently record both the lowest antenatal care coverage and the highest rates
-of child deprivation.
-
 ```{python}
 #| label: load-data
 #| echo: true
+#| warning: false
 
 import polars as pl
-import pandas as pd
-import io
 
 ind1 = pl.read_csv("unicef_indicator_1.csv")
 ind2 = pl.read_csv("unicef_indicator_2.csv")
@@ -45,11 +35,11 @@ print(ind1.shape, ind2.shape, meta.shape)
 #| label: eda
 #| echo: true
 
-# Quick overview of data quality
+# Quick overview
 print(ind1.describe())
 print(ind1.null_count())
 
-# Keep only "Total" sex rows to avoid double-counting
+# ind1: keep only "Total" sex rows to avoid double-counting
 ind1_clean = ind1.filter(pl.col("sex") == "Total")
 ind2_clean = ind2.filter(pl.col("sex") == "Total")
 ```
@@ -90,7 +80,7 @@ meta_latest = (
     })
 )
 
-# Master joined dataframe — all three files merged
+# Master joined dataframe
 master = (
     ind1_latest
     .join(ind2_latest.select(["alpha_3_code", "deprivation_pct"]),
@@ -104,13 +94,8 @@ master = (
 
 ```{python}
 #| label: timeseries-prep
-#| echo: true
 
-from plotnine import *
-import geopandas as gpd
-import geodatasets
-
-# Pick 5 representative countries for the time-series
+# For the time-series chart: pick 5 representative countries
 focus_countries = ["Nigeria", "India", "Bangladesh", "Ethiopia", "Brazil"]
 
 ts_data = (
@@ -119,25 +104,28 @@ ts_data = (
     .select(["country", "time_period", "obs_value"])
     .sort("time_period")
 )
-```
 
-## The global picture
-The map below shows antenatal care coverage by country using the most recent available
-data. Sub-Saharan Africa and parts of South Asia record the lowest coverage — several
-countries fall below **20%**. In contrast, most of Europe and the Americas exceed **80%**,
-revealing a stark geographic divide in maternal healthcare access.
+from plotnine import *
+import geopandas as gpd
+import geodatasets
+import pandas as pd
 
-```{python}
 #| label: fig-worldmap
 #| fig-cap: "Antenatal care coverage (%) by country — most recent year"
 #| echo: true
 #| warning: false
+```
 
+## The global picture
+```{python}
+world = gpd.read_file(geodatasets.get_path("naturalearth.land"))
 world_full = gpd.read_file(
     "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson"
 )
 
-# Convert polars to pandas without pyarrow dependency
+# Merge master (converted to pandas for geopandas join)
+import pandas as pd
+import io
 master_pd = pd.read_csv(io.StringIO(master.write_csv()))
 map_data = world_full.merge(master_pd, left_on="ADM0_A3", right_on="alpha_3_code", how="left")
 
@@ -156,13 +144,8 @@ map_data = world_full.merge(master_pd, left_on="ADM0_A3", right_on="alpha_3_code
             plot_subtitle=element_text(size=10))
 )
 ```
-
 ## Deprivation by country
-Child deprivation is concentrated in a small number of countries, mostly in
-Sub-Saharan Africa. The 15 countries shown below account for a disproportionate
-share of the world's most vulnerable children — with the highest-ranked countries
-recording deprivation rates above **20%**.
-
+Figure 1 reveals that Sub-Saharan Africa has the lowest antenatal coverage, with countries like Niger recording under 20%. In contrast, high-income countries in Europe and North America consistently exceed 90%.
 ```{python}
 #| label: fig-barchart
 #| fig-cap: "Top 15 countries with highest child deprivation"
@@ -189,28 +172,19 @@ bar_data = pd.read_csv(io.StringIO(
 ```
 
 ## Wealth and healthcare
-The scatterplot below confirms a strong positive relationship between GDP per capita
-and antenatal care coverage. Countries with a GDP per capita above **$10,000** rarely
-fall below 70% coverage, while most countries below **$1,000** per capita cluster
-under 50%. Bubble size represents population — India and Nigeria, two of the most
-populous nations, stand out as critical cases where progress would have the greatest impact.
-
 ```{python}
 #| label: fig-scatter
 #| fig-cap: "Relationship between GDP per capita and antenatal care coverage"
 #| echo: true
 #| warning: false
 
-scatter_data = pd.read_csv(io.StringIO(
-    master.drop_nulls(subset=["gdp_per_capita", "anc_pct"]).write_csv()
-))
-
+scatter_data = master.drop_nulls(subset=["gdp_per_capita", "anc_pct"]).to_pandas()
 (
     ggplot(scatter_data, aes(x="gdp_per_capita", y="anc_pct"))
     + geom_point(aes(size="population"), alpha=0.5, color="#2980b9")
     + geom_smooth(method="lm", color="#e74c3c", se=True)
     + scale_x_log10(labels=lambda l: [f"${x:,.0f}" for x in l])
-    + scale_size_continuous(name="Population", guide=None)
+    + scale_size_continuous(name="Population", guide=False)
     + labs(title="Wealthier countries have better maternal healthcare",
            x="GDP per capita (log scale, constant 2015 USD)",
            y="Women attending 4+ antenatal visits (%)",
@@ -221,12 +195,6 @@ scatter_data = pd.read_csv(io.StringIO(
 ```
 
 ## Progress over time
-Despite the disparities, the time-series below shows that progress is possible.
-All five countries tracked have improved their antenatal care coverage since 2000,
-with **Bangladesh** recording one of the steepest climbs — rising from under 20%
-to over 40% in two decades. **Ethiopia** shows a similar trajectory, suggesting
-that targeted health investment can move the needle even in low-income settings.
-
 ```{python}
 #| label: fig-timeseries
 #| fig-cap: "Antenatal care coverage trends in selected countries"
@@ -247,18 +215,4 @@ ts_pd = pd.read_csv(io.StringIO(ts_data.write_csv()))
             legend_position="right")
 )
 ```
-
 ## Conclusion
-The data examined in this report points to a persistent and measurable gap in
-maternal and child welfare between high- and low-income countries. Antenatal care
-coverage and child deprivation are not random — they track closely with GDP per
-capita, suggesting that economic development is a necessary, if not sufficient,
-condition for improving outcomes.
-
-The encouraging finding is that progress is not impossible. Countries like
-**Bangladesh** and **Ethiopia** have made meaningful gains without reaching
-high-income status, demonstrating that policy choices and targeted investment
-can accelerate improvement. Closing the gap globally will require sustained
-attention to the countries that data consistently places at the bottom — not
-as statistics, but as communities of children and mothers whose outcomes
-are still being shaped by decisions made today.
