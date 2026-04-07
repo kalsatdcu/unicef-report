@@ -10,7 +10,6 @@ format:
     toc: true
     toc-depth: 3
     smooth-scroll: true
-    output-dir: docs
 execute:
   warning: false
   message: false
