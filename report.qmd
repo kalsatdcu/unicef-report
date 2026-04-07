@@ -1,0 +1,11 @@
+#| label: load-data
+#| echo: true
+#| warning: false
+
+import polars as pl
+
+ind1 = pl.read_csv("unicef_indicator_1.csv")
+ind2 = pl.read_csv("unicef_indicator_2.csv")
+meta = pl.read_csv("unicef_metadata.csv")
+
+print(ind1.shape, ind2.shape, meta.shape)
