@@ -1,6 +1,7 @@
+yaml
 ---
 title: "The Invisible Crisis: Child Deprivation and Maternal Health Worldwide"
-author: "Your Name"
+author: "Kalyani Girish Korpe"
 date: today
 format:
   html:
@@ -9,7 +10,6 @@ format:
     theme: flatly
     toc: true
     toc-depth: 3
-    number-sections: false
     smooth-scroll: true
 execute:
   warning: false
@@ -17,6 +17,8 @@ execute:
 ---
 
 ## Introduction
+python
+
 #| label: load-data
 #| echo: true
 #| warning: false

@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Your Name">
+<meta name="author" content="Kalyani Girish Korpe">
 <meta name="dcterms.date" content="2026-04-07">
 
 <title>The Invisible Crisis: Child Deprivation and Maternal Health Worldwide</title>
@@ -2175,7 +2175,8 @@ vertical-align: -.125em;
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#yaml" id="toc-yaml" class="nav-link active" data-scroll-target="#yaml">yaml</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
   <li><a href="#quick-overview" id="toc-quick-overview" class="nav-link" data-scroll-target="#quick-overview">Quick overview</a></li>
   <li><a href="#ind1-keep-only-total-sex-rows-to-avoid-double-counting" id="toc-ind1-keep-only-total-sex-rows-to-avoid-double-counting" class="nav-link" data-scroll-target="#ind1-keep-only-total-sex-rows-to-avoid-double-counting">ind1: keep only “Total” sex rows to avoid double-counting</a></li>
   <li><a href="#get-most-recent-year-per-country-for-indicator-1" id="toc-get-most-recent-year-per-country-for-indicator-1" class="nav-link" data-scroll-target="#get-most-recent-year-per-country-for-indicator-1">Get most recent year per country for indicator 1</a></li>
@@ -2210,7 +2211,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Your Name </p>
+             <p>Kalyani Girish Korpe </p>
           </div>
   </div>
     
@@ -2229,8 +2230,13 @@ vertical-align: -.125em;
 </header>
 
 
+<section id="yaml" class="level2">
+<h2 class="anchored" data-anchor-id="yaml">yaml</h2>
+<p>title: “The Invisible Crisis: Child Deprivation and Maternal Health Worldwide” author: “Kalyani Girish Korpe” date: today format: html: embed-resources: true code-fold: true theme: flatly toc: true toc-depth: 3 smooth-scroll: true execute: warning: false message: false —</p>
+</section>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>python</p>
 <p>#| label: load-data #| echo: true #| warning: false</p>
 <p>import polars as pl</p>
 <p>ind1 = pl.read_csv(“unicef_indicator_1.csv”) ind2 = pl.read_csv(“unicef_indicator_2.csv”) meta = pl.read_csv(“unicef_metadata.csv”)</p>
